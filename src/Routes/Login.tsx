@@ -4,11 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 
 const Login = () => {
-  const user = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user && user.email) {
+    if (user) {
       navigate('/');
     }
   }, [user, navigate]);
@@ -18,7 +18,6 @@ const Login = () => {
       await signInWithGoogle();
     } catch (error) {
       console.error('Error signing in:', error);
-      // Handle sign-in error if needed
     }
   };
 

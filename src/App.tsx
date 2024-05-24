@@ -4,16 +4,18 @@ import {
   Routes,
   Navigate,
 } from 'react-router-dom';
-
 import Dashboard from './Routes/Dashboard';
 import Login from './Routes/Login';
 import Navbar from './Routes/Navbar';
+import Profile from './Routes/Profile';
 import PrivateRoute from './Routes/PrivateRoute';
 import useAuth from './hooks/useAuth';
 
 const App = () => {
-  // get auth value
-  const auth = useAuth();
+  const { user, profileComplete, loading } = useAuth();
+
+  if (loading) return <p>Loading...</p>;
+
   return (
     <Router>
       <Navbar />
@@ -21,7 +23,15 @@ const App = () => {
         <Route
           path='/'
           element={
-            auth ? <Navigate to='/dashboard' /> : <Navigate to='/login' />
+            user ? (
+              profileComplete ? (
+                <Navigate to='/dashboard' />
+              ) : (
+                <Navigate to='/profile' />
+              )
+            ) : (
+              <Navigate to='/login' />
+            )
           }
         />
         <Route
@@ -33,6 +43,14 @@ const App = () => {
           }
         />
         <Route path='/login' element={<Login />} />
+        <Route
+          path='/profile'
+          element={
+            <PrivateRoute>
+              <Profile />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </Router>
   );

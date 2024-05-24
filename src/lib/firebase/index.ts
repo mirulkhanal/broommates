@@ -4,8 +4,11 @@ import {
   FirestoreDataConverter,
   addDoc,
   collection,
+  doc,
+  getDoc,
   getDocs,
   getFirestore,
+  setDoc,
 } from 'firebase/firestore';
 import { GroceryList } from '../../data';
 import firebaseConfig from './firebaseConfig';
@@ -51,7 +54,7 @@ export async function addItemToGroceryList(item: GroceryList) {
 }
 
 // Fetch grocery items from the 'grocery-list' collection with type safety
-export async function fetchGroceryList() {
+export async function fetchGroceryList(): Promise<GroceryList[]> {
   try {
     const querySnapshot = await getDocs(
       collection(db, 'grocery-list').withConverter(groceryListConverter)
@@ -62,13 +65,40 @@ export async function fetchGroceryList() {
     return groceryItems;
   } catch (error) {
     console.error('Error fetching grocery list: ', error);
+    return []; // Return an empty array on error
   }
+}
+
+// User profile handling
+export async function createUserProfile(user: UserInfo) {
+  const userRef = doc(db, 'users', user.uid);
+  const userDoc = await getDoc(userRef);
+
+  if (!userDoc.exists()) {
+    await setDoc(userRef, {
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      profileComplete: false,
+    });
+  }
+
+  return userDoc.data();
+}
+
+export async function fetchUserProfile(userId: string) {
+  const userRef = doc(db, 'users', userId);
+  const userDoc = await getDoc(userRef);
+  return userDoc.exists() ? userDoc.data() : null;
 }
 
 export const signInWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
   try {
-    await signInWithPopup(getAuth(app), provider);
+    const result = await signInWithPopup(getAuth(app), provider);
+    const user = result.user;
+    const userProfile = await createUserProfile(user);
+    return { user, userProfile };
   } catch (e) {
     if (e instanceof FirebaseError) {
       throw new Error('Error signing in with Google: ' + e.message);

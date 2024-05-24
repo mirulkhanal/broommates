@@ -1,4 +1,3 @@
-// @ts-nocheck
 import styled from 'styled-components';
 import { Metrics, Priority } from '../data';
 import { useState } from 'react';
@@ -6,13 +5,21 @@ import { useState } from 'react';
 export const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
+  background-color: #242424;
+  color: #e0e0e0;
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  border-radius: 10px;
+  overflow: hidden;
 `;
 
 export const TableHeader = styled.th`
-  background-color: #f4f4f4;
-  color: #333;
-  padding: 10px;
+  background-color: #333;
+  color: #00ccff;
+  padding: 15px;
   text-align: left;
+  font-weight: bold;
+  text-transform: uppercase;
+  border-bottom: 2px solid #00ccff;
 `;
 
 export const TableHeaderGroup = styled.thead``;
@@ -21,16 +28,38 @@ export const TableBodyGroup = styled.tbody``;
 
 export const TableRow = styled.tr`
   &:nth-child(even) {
-    background-color: #f9f9f9;
+    background-color: #2a2a2a;
+  }
+  &:nth-child(odd) {
+    background-color: #242424;
+  }
+  &:hover {
+    background-color: #333;
   }
 `;
 
 export const TableCell = styled.td`
-  padding: 10px;
-  border: 1px solid #ddd;
+  padding: 15px;
+  border: 1px solid #333;
+  color: #e0e0e0;
+  font-size: 0.9em;
+  text-align: left;
 `;
 
-function useTableData<ObjectType>() {
+export const Select = styled.select`
+  background-color: #333;
+  color: #00ccff;
+  border: 1px solid #00ccff;
+  padding: 5px;
+  border-radius: 5px;
+  outline: none;
+  option {
+    background-color: #242424;
+    color: #e0e0e0;
+  }
+`;
+
+function useTableData<ObjectType extends object>() {
   const [selectedOption, setSelectedOption] = useState('');
   const createTable = (data: ObjectType[]) => {
     const keys = [...Object.keys(data[0])];
@@ -45,7 +74,7 @@ function useTableData<ObjectType>() {
           </TableRow>
         </TableHeaderGroup>
         <TableBodyGroup>
-          {data.map((item, index) => (
+          {data.map((item: any, index) => (
             <TableRow key={index}>
               {keys.map((key, i) => {
                 let value;
@@ -59,7 +88,7 @@ function useTableData<ObjectType>() {
                   value = `${item[key]}₨`;
                 } else if (key === 'status') {
                   value = (
-                    <select
+                    <Select
                       defaultValue={item[key].status}
                       onChange={(e) =>
                         setSelectedOption(e.currentTarget.value)
@@ -67,7 +96,7 @@ function useTableData<ObjectType>() {
                       <option value='pending'>Pending</option>
                       <option value='done'>Done</option>
                       <option value='postponed'>Postponed</option>
-                    </select>
+                    </Select>
                   );
                 } else {
                   value = item[key];
@@ -81,7 +110,7 @@ function useTableData<ObjectType>() {
     );
   };
 
-  return { createTable };
+  return { createTable, selectedOption };
 }
 
 export default useTableData;
