@@ -11,9 +11,7 @@ export type GroceryList = {
   status: Status;
   author: Author; // Updated to store the user ID
 };
-export interface Author extends UserInfo {
-  
-}
+export interface Author extends UserInfo {}
 type Quantity = {
   amount: string;
   metric: Metrics;
@@ -51,3 +49,13 @@ export const PriorityArray: string[] = [
   'Next week',
   'Next month',
 ];
+
+// Firestore schema for a board
+export interface Board {
+  boardId: string;
+  createdUserId: string;
+  boardType: 'Grocery' | 'Chores';
+  title: string;
+  description: string;
+  users: { userId: string; permission: 'view' | 'edit' }[];
+}

@@ -1,6 +1,6 @@
 import React from 'react';
 import GroceryItem from './GroceryItem';
-import { GroceryList } from '../../data';
+import { GroceryList } from '../../types';
 
 interface GroceryListProps {
   items: GroceryList[];

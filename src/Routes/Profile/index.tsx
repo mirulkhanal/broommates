@@ -1,19 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAuth } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase';
+import { db } from '../../lib/firebase';
+import useAuth from '../../hooks/useAuth';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const auth = getAuth();
-  const user = auth.currentUser;
+  const { user, profileComplete } = useAuth();
 
   const [bio, setBio] = useState('');
   const [age, setAge] = useState('');
 
   useEffect(() => {
-    if (user) {
+    if (profileComplete) {
       navigate('/');
     }
   }, [user, navigate]);

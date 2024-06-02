@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import { Metrics, Priority } from '../data';
+import { Metrics, Priority } from '../types';
 import { useState } from 'react';
 
 export const Table = styled.table`

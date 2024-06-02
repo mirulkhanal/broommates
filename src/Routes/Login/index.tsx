@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
-import { signInWithGoogle } from '../lib/firebase';
+import { signInWithGoogle } from '../../lib/firebase';
 import { useNavigate } from 'react-router-dom';
-import useAuth from '../hooks/useAuth';
+import useAuth from '../../hooks/useAuth';
 
 const Login = () => {
   const { user } = useAuth();
