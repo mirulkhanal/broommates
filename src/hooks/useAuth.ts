@@ -1,21 +1,27 @@
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { fetchUserProfile } from '../lib/firebase';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { fetchUserProfile, UserProfile } from '../lib/firebase';
 
-// Authentication hook to manage user state
 const useAuth = () => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [profileComplete, setProfileComplete] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const auth = getAuth();
   useEffect(() => {
+    const auth = getAuth(); // Get the auth instance
+
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         const userProfile = await fetchUserProfile(currentUser.uid);
-        setUser(currentUser);
-        setProfileComplete(userProfile?.profileComplete || false);
-        localStorage.setItem('user', JSON.stringify(currentUser));
+        if (userProfile) {
+          setUser(userProfile);
+          setProfileComplete(userProfile.profileComplete);
+          localStorage.setItem('user', JSON.stringify(userProfile));
+        } else {
+          setUser(null);
+          setProfileComplete(false);
+          localStorage.removeItem('user');
+        }
       } else {
         setUser(null);
         setProfileComplete(false);

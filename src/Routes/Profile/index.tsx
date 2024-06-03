@@ -1,65 +1,164 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  fetchUserBoards,
+  updateUserProfile,
+  uploadProfilePicture,
+  UserProfile,
+} from '../../lib/firebase';
 import useAuth from '../../hooks/useAuth';
+import {
+  ProfileContainer,
+  ProfileHeader,
+  ProfileImage,
+  ProfileDetails,
+  ProfileInfo,
+  EditProfileButton,
+  BoardsGrid,
+  BoardItem,
+} from './profileComponents';
 
 const Profile = () => {
+  const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
-  const { user, profileComplete } = useAuth();
+  const { user } = useAuth();
 
-  const [bio, setBio] = useState('');
-  const [age, setAge] = useState('');
+  const [boards, setBoards] = useState<any[]>([]);
+  const [editing, setEditing] = useState(false);
+  const [newProfileData, setNewProfileData] = useState<Partial<UserProfile>>({
+    displayName: '',
+    bio: '',
+    age: undefined,
+    photoURL: '',
+  });
+  const [profilePicture, setProfilePicture] = useState<File | null>(null);
 
   useEffect(() => {
-    if (profileComplete) {
-      navigate('/');
-    }
-  }, [user, navigate]);
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (user) {
+    const fetchBoards = async () => {
       try {
-        await setDoc(
-          doc(db, 'users', user.uid),
-          {
-            bio,
-            age,
-            profileComplete: true,
-          },
-          { merge: true }
-        );
-        navigate('/dashboard');
+        const userBoards = await fetchUserBoards(userId!);
+        setBoards(userBoards);
       } catch (error) {
-        console.error('Error updating profile: ', error);
+        console.error('Error fetching user boards: ', error);
       }
+    };
+
+    if (user && user.uid === userId) {
+      console.log('CHECK USER: ', user && user.uid === userId);
+      fetchBoards();
+    } else {
+      navigate('/login');
+    }
+  }, [userId, user, navigate]);
+
+  useEffect(() => {
+    if (user) {
+      setNewProfileData({
+        displayName: user.displayName || '',
+        bio: user.bio || '',
+        age: user.age,
+        photoURL: user.photoURL || '',
+      });
+    }
+  }, [user]);
+
+  const handleEditProfile = () => setEditing(true);
+
+  const handleSaveProfile = async () => {
+    try {
+      let updatedPhotoURL = user?.photoURL;
+      if (profilePicture) {
+        updatedPhotoURL = await uploadProfilePicture(profilePicture, userId!);
+      }
+      const updatedProfileData = {
+        ...newProfileData,
+        age: newProfileData.age ? Number(newProfileData.age) : undefined,
+        photoURL: updatedPhotoURL!,
+      };
+      await updateUserProfile(userId!, updatedProfileData);
+      setEditing(false);
+    } catch (error) {
+      console.error('Error updating profile: ', error);
     }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setProfilePicture(e.target.files[0]);
+    }
+  };
+
+  if (!user) {
+    return <p>Loading profile...</p>;
+  }
+
   return (
-    <div>
-      <h1>Complete Your Profile</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Bio</label>
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label>Age</label>
-          <input
-            type='number'
-            value={age}
-            onChange={(e) => setAge(e.target.value)}
-            required
-          />
-        </div>
-        <button type='submit'>Save Profile</button>
-      </form>
-    </div>
+    <ProfileContainer>
+      <ProfileHeader>
+        <ProfileImage src={user.photoURL} alt='Profile Picture' />
+        <ProfileDetails>
+          {editing ? (
+            <>
+              <input
+                type='text'
+                value={newProfileData.displayName ?? ''}
+                onChange={(e) =>
+                  setNewProfileData({
+                    ...newProfileData,
+                    displayName: e.target.value,
+                  })
+                }
+              />
+              <textarea
+                value={newProfileData.bio ?? ''}
+                onChange={(e) =>
+                  setNewProfileData({
+                    ...newProfileData,
+                    bio: e.target.value,
+                  })
+                }
+              />
+              <input
+                type='number'
+                value={
+                  newProfileData.age !== undefined
+                    ? newProfileData.age.toString()
+                    : ''
+                }
+                onChange={(e) =>
+                  setNewProfileData({
+                    ...newProfileData,
+                    age: e.target.value ? Number(e.target.value) : undefined,
+                  })
+                }
+              />
+              <input type='file' onChange={handleFileChange} />
+              <button onClick={handleSaveProfile}>Save Profile</button>
+            </>
+          ) : (
+            <>
+              <h1>{user.displayName}</h1>
+              <ProfileInfo>
+                <p>{user.bio}</p>
+                <p>Age: {user.age}</p>
+              </ProfileInfo>
+              {user && user.uid === userId && (
+                <EditProfileButton onClick={handleEditProfile}>
+                  Edit Profile
+                </EditProfileButton>
+              )}
+            </>
+          )}
+        </ProfileDetails>
+      </ProfileHeader>
+      <BoardsGrid>
+        {boards.map((board) => (
+          <BoardItem key={board.id}>
+            <p>{board.title}</p>
+          </BoardItem>
+        ))}
+      </BoardsGrid>
+    </ProfileContainer>
   );
 };
 

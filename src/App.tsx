@@ -1,9 +1,4 @@
-import {
-  BrowserRouter as Router,
-  Route,
-  Routes,
-  Navigate,
-} from 'react-router-dom';
+import { Route, Routes, Navigate } from 'react-router-dom';
 import Dashboard from './Routes/Dashboard';
 import Login from './Routes/Login';
 import Navbar from './Routes/Navbar';
@@ -17,7 +12,7 @@ const App = () => {
   if (loading) return <p>Loading...</p>;
 
   return (
-    <Router>
+    <>
       <Navbar />
       <Routes>
         <Route
@@ -27,7 +22,7 @@ const App = () => {
               profileComplete ? (
                 <Navigate to='/dashboard' />
               ) : (
-                <Navigate to='/profile' />
+                <Navigate to={`/profile/${user.uid}`} />
               )
             ) : (
               <Navigate to='/login' />
@@ -44,7 +39,7 @@ const App = () => {
         />
         <Route path='/login' element={<Login />} />
         <Route
-          path='/profile'
+          path='/profile/:userId'
           element={
             <PrivateRoute>
               <Profile />
@@ -52,7 +47,7 @@ const App = () => {
           }
         />
       </Routes>
-    </Router>
+    </>
   );
 };
 

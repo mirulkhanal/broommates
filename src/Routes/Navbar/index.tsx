@@ -32,7 +32,12 @@ const Navbar = () => {
   };
 
   const handleProfile = () => {
-    navigate('/profile');
+    if (user && user.uid) {
+      navigate(`/profile/${user.uid}`);
+    } else {
+      console.warn('User object is invalid or missing UID.');
+      // Handle the case where the user object is invalid or missing UID
+    }
   };
 
   const handleMouseEnter = () => {
